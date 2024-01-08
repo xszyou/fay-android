@@ -57,7 +57,8 @@ public class FayConnectorService extends Service {
     private  boolean isPlay = false;
     private boolean isMic = false;
     private boolean isRecordStarted = false;
-    BroadcastReceiver scoReceiver;
+    private BroadcastReceiver scoReceiver;
+    private  long keepTime = 0;
 
 
     //创建通知
@@ -183,14 +184,23 @@ public class FayConnectorService extends Service {
                         Log.d("fay", "开始传输音频");
                         while (running) {
                             try {
-                                Thread.sleep(10);
+                                Thread.sleep(50);
                             }catch (Exception e){}
-                            if (socket == null || socket.isClosed()){
+                            if (socket == null || out == null || socket.isClosed()){
+                                if (socket != null && !socket.isClosed()){
+                                    try {
+                                        socket.close();
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                    socket = null;
+                                }
+
                                 try {
-                                    Thread.sleep(10000);
+                                    Thread.sleep(1000);
                                 }catch (Exception ee){
                                 }
-                                reconnectSocket();
+                                continue;
                             }
                             if (isPlay){
                                 continue;
@@ -211,6 +221,13 @@ public class FayConnectorService extends Service {
                                     out.write(data);
                                 }catch (Exception e){
                                     Log.d("fay", "socket断开10秒后重连");
+                                    if (socket != null && !socket.isClosed()){
+                                        try {
+                                            socket.close();
+                                        } catch (IOException ee) {
+                                            ee.printStackTrace();
+                                        }
+                                    }
                                     socket = null;
                                     continue;
                                 }
@@ -228,7 +245,9 @@ public class FayConnectorService extends Service {
                         record = null;
                         ((AudioManager) getSystemService(Context.AUDIO_SERVICE)).stopBluetoothSco();
                         try {
-                            socket.close();
+                            if (socket != null && !socket.isClosed()) {
+                                socket.close();
+                            }
                         } catch (Exception e) {
                         }
                         socket = null;
@@ -246,7 +265,15 @@ public class FayConnectorService extends Service {
             public void run() {
                     while (running) {
                         try {
-                            if (socket == null || socket.isClosed()) {
+                            if (socket == null || in == null || socket.isClosed()) {
+                                if (socket != null && !socket.isClosed()){
+                                    try {
+                                        socket.close();
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                                socket = null;
                                 try {
                                     Thread.sleep(1000);
                                 } catch (Exception e) {
@@ -255,19 +282,28 @@ public class FayConnectorService extends Service {
                             }
                             byte[] data = new byte[9];
                             byte[] wavhead = new byte[]{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};//文件传输开始标记
+                            byte[] keephead = new byte[] {(byte) 0xf0, (byte) 0xf1, (byte) 0xf2, (byte) 0xf3, (byte) 0xf4, (byte) 0xf5, (byte) 0xf6, (byte) 0xf7, (byte) 0xf8};
                             in.read(data);
+
+                            //心跳信息(大约5秒一个)
+                            if (Arrays.equals(keephead, data)) {
+                                keepTime = new Date().getTime();
+                                continue;
+                            }
+                            //开始传输音频
                             if (Arrays.equals(wavhead, data)) {
                                 Log.d("fay", "开始接收音频文件");
                                 String filedata = "";
                                 data = new byte[1024];
                                 int len = 0;
                                 while ((len = in.read(data)) != -1) {
+                                    keepTime = new Date().getTime();//避免长文件接收时误以为心跳超时
                                     byte[] temp = new byte[len];
                                     System.arraycopy(data, 0, temp, 0, len);
                                     filedata += MainActivity.bytesToHexString(temp);
-                                    int index = filedata.indexOf("080706050403020100");
-                                    if (filedata.length() > 9 && index > 0) {//wav文件结束标记
-                                        filedata = filedata.substring(0, index).replaceAll("F0F1F2F3F4F5F6F7F8", "");
+                                    int index = filedata.indexOf("080706050403020100");//文件结束标记
+                                    if (filedata.length() > 9 && index > 0) {
+                                        filedata = filedata.substring(0, index).replaceAll("F0F1F2F3F4F5F6F7F8", "");//去掉心跳信息
                                         File wavFile = new File(cacheDir, String.format("sample-%s.mp3", new Date().getTime() + ""));
                                         wavFile.createNewFile();
                                         FileOutputStream fos = new FileOutputStream(wavFile);
@@ -337,15 +373,19 @@ public class FayConnectorService extends Service {
             public void run() {
                 try{
                     while (running) {
-                        Thread.sleep(3000);
                         String statusStr = socket == null ? "正在连接" : "已经连接";
                         if (totalsend + totalrece > 2048){
                             inotify("fay connector demo", statusStr + "fay控制器，累计接收/发送：" + String.format("%.2f", (double)totalrece / 1024) + "/" + String.format("%.2f", (double)totalsend / 1024) + "MB");
                         } else {
                             inotify("fay connector demo", statusStr + "fay控制器，累计接收/发送：" + totalrece + "/" + totalsend + "KB");
                         }
+                        if (socket == null || in == null || out == null || new Date().getTime() - keepTime > 12000){
+                            reconnectSocket();
+                        }
+                        Thread.sleep(3000);
                     }
                     inotify("fay connector demo", "已经断开fay控制器");
+                    running = false;
                 }catch (Exception e){
                     Log.e("fay", e.toString());
                 }finally {
@@ -419,6 +459,7 @@ public class FayConnectorService extends Service {
             socket = new Socket(serverAddress.split(":")[0], Integer.parseInt(serverAddress.split(":")[1]));
             in = socket.getInputStream();
             out = socket.getOutputStream();
+            keepTime = new Date().getTime();
             Log.d("fay", "重新连接 fay 控制器成功");
         } catch (IOException e) {
             Log.e("fay", "重新连接 fay 控制器失败", e);
