@@ -1,7 +1,7 @@
 # android 连接器
 android 连接器 app会常驻手机后台，你可以随时随地保持与Fay数字人（https://github.com/TheRamU/Fay）的沟通。
 
-![image-20231225180134156](data\image-20231225180134156.png)
+![image-20231225180134156](data/image-20231225180134156.png)
 
 
 
