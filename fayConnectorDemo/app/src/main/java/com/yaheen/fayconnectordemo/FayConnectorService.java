@@ -367,7 +367,7 @@ public class FayConnectorService extends Service {
         });
         receThread.start();
 
-        //通知栏
+        //更新通知栏，防死
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -404,7 +404,7 @@ public class FayConnectorService extends Service {
             pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
         }
         if (channelId == null){
-            channelId = createNotificationChannel("my_channel_ID", "my_channel_NAME", NotificationManager.IMPORTANCE_HIGH);
+            channelId = createNotificationChannel("fay", "fay", NotificationManager.IMPORTANCE_LOW);
         }
         if (notificationManager == null){
             notificationManager = NotificationManagerCompat.from(this);
@@ -414,9 +414,10 @@ public class FayConnectorService extends Service {
                 .setContentText(content)
                 .setContentIntent(pendingIntent)
                 .setSmallIcon(R.drawable.icon)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setAutoCancel(true);
-        //notificationManager.notify(100, notification2.build());
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setAutoCancel(true)
+                .setOnlyAlertOnce(true)
+                .setOngoing(true);
         startForeground(100, notification2.build());
     }
 
