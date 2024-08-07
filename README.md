@@ -17,6 +17,10 @@ android 连接器 app会常驻手机后台，你可以随时随地保持与Fay�
 
 **更新说明**
 
+2024.08.07
+
+1、提供硅基duix与Fay的对接实现android 2d数字人的方案：https://qqk9ntwbcit.feishu.cn/wiki/BeDpwXGZ7irQM9k5qBdchWw7nmg
+
 2024.02.19
 
 1、优化通知弹出逻辑。
