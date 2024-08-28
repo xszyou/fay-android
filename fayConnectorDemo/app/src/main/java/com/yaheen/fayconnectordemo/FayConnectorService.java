@@ -304,13 +304,13 @@ public class FayConnectorService extends Service {
                                     int index = filedata.indexOf("080706050403020100");//文件结束标记
                                     if (filedata.length() > 9 && index > 0) {
                                         filedata = filedata.substring(0, index).replaceAll("F0F1F2F3F4F5F6F7F8", "");//去掉心跳信息
-                                        File wavFile = new File(cacheDir, String.format("sample-%s.mp3", new Date().getTime() + ""));
+                                        File wavFile = new File(cacheDir, String.format("sample-%s.wav", new Date().getTime() + ""));
                                         wavFile.createNewFile();
                                         FileOutputStream fos = new FileOutputStream(wavFile);
                                         fos.write(MainActivity.decodeHexBytes(filedata.toCharArray()));
                                         fos.close();
                                         totalrece += filedata.length() / 2 / 1024;
-                                        Log.d("fay", "mp3文件接收完成:" + wavFile.getAbsolutePath() + "," + filedata.length() / 2);
+                                        Log.d("fay", "wav文件接收完成:" + wavFile.getAbsolutePath() + "," + filedata.length() / 2);
                                         try {
                                             MediaPlayer player = new MediaPlayer();
                                             player.setDataSource(wavFile.getAbsolutePath());
