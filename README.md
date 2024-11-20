@@ -52,7 +52,7 @@
 
 ## **高级玩法**
 
-![](E:/github/Fay-agent/readme/interface.png)
+![](readme/interface.png)
 
 
 
