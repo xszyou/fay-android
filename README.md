@@ -4,8 +4,7 @@
     <h1>Fay</h1>
 	<h3>Fay android 连接器</h3>
 </div>
-
-连接Fay数字人框架使用，可以实现与Fay的文字及语音消息的收发，更可静默的保持手机后台运行。      
+连接Fay数字人框架使用，可以实现与Fay语音消息的收发，更可静默的保持手机后台运行。      
 更新日志：https://qqk9ntwbcit.feishu.cn/wiki/UlbZwfAXgiKSquk52AkcibhHngg
 使用文档：https://qqk9ntwbcit.feishu.cn/wiki/JzMJw7AghiO8eHktMwlcxznenIg
 
@@ -16,17 +15,17 @@
 
 - 完全开源，商用免责
 - 支持连接Fay服务器或主机端
-- 支持本地whisper语音识别
 - 支持与Fay的语音互传
-- 支持与Fay的文字消息收发
 - 长驻后台运行
 - 收发数据量实时显示
+- 3m极简运行
+- 支持wear os android 手表（高通2100及4100 cpu 实测）
 
 ###               
 
 ## **UI**
 
-![](readme/android.png)
+![](readme/ui.png)
 
 
 
